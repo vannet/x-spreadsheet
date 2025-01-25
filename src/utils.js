@@ -286,7 +286,7 @@ const replaceCellRefWithNew = (str, getNewCell, opts) => {
   return newStr;
 };
 
-const readExcelFile = (file) => {  
+const readExcelFile = (file) => {
 };
 
 const parseExcelStyleToHTML = (styling, theme) => {
@@ -423,6 +423,11 @@ const parseExcelStyleToHTML = (styling, theme) => {
   return styleString;
 };
 
+const stox = (wb) => {
+  const out = [];
+  return out;
+};
+
 const rgbaToRgb = (hexColor) => {
   // Assuming a white background, so the background RGB is (255, 255, 255)
   const backgroundR = 255,
@@ -521,6 +526,7 @@ export {
   generateUniqueId,
   replaceCellRefWithNew,
   readExcelFile,
+  stox,
   rgbaToRgb,
   getNewSheetName,
   getRowHeightForTextWrap,

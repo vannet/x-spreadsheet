@@ -128,12 +128,6 @@ export default class Toolbar {
     const style = data.defaultStyle();
     this.items = [
       [
-        {
-          id: "import",
-          btn: new Import(),
-        },
-      ],
-      [
         { id: "undo", btn: (this.undoEl = new Undo()) },
         { id: "redo", btn: (this.redoEl = new Redo()) },
         { id: "print", btn: new Print() },

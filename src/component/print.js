@@ -13,6 +13,7 @@ import { t } from "../locale/locale";
 // 96 * cm / 2.54 , 96 * cm / 2.54
 
 const PAGER_SIZES = [
+  ["Letter", 8.5, 11],
   ["A3", 11.69, 16.54],
   ["A4", 8.27, 11.69],
   ["A5", 5.83, 8.27],
