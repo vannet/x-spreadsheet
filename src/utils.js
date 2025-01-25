@@ -1,5 +1,3 @@
-import ExcelJs from "exceljs";
-import * as XLSX from "xlsx";
 import {
   PX_TO_PT,
   CELL_REF_REPLACE_REGEX,
@@ -288,41 +286,7 @@ const replaceCellRefWithNew = (str, getNewCell, opts) => {
   return newStr;
 };
 
-const readExcelFile = (file) => {
-  const ExcelWorkbook = new ExcelJs.Workbook();
-  const styles = {};
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      ExcelWorkbook.xlsx.load(reader.result).then((workbookIns) => {
-        workbookIns.eachSheet((sheet) => {
-          const sheetName = sheet?.name;
-          styles[sheetName] = {};
-          sheet.eachRow({ includeEmpty: true }, (row) => {
-            row?.eachCell({ includeEmpty: true }, (cell) => {
-              const style = cell.style;
-              const address = cell.address;
-              styles[sheetName][address] = style;
-            });
-          });
-        });
-
-        const data = new Uint8Array(e.target?.result);
-        const wb = XLSX?.read(data, {
-          type: "array",
-          cellStyles: true,
-          sheetStubs: true,
-        });
-
-        const workbook = addStylesToWorkbook(styles, wb);
-        resolve(workbook);
-      });
-    };
-    reader.onerror = (error) => {
-      reject(error);
-    };
-    reader.readAsArrayBuffer(file);
-  });
+const readExcelFile = (file) => {  
 };
 
 const parseExcelStyleToHTML = (styling, theme) => {
@@ -459,134 +423,6 @@ const parseExcelStyleToHTML = (styling, theme) => {
   return styleString;
 };
 
-const addStylesToWorkbook = (styles, workbook) => {
-  const wb = { ...workbook };
-  wb.SheetNames.forEach((sheetName) => {
-    const worksheet = wb.Sheets[sheetName];
-    if (Object.hasOwn(styles, sheetName)) {
-      Object.entries(styles[sheetName]).forEach(([cellAddress, cellStyle]) => {
-        if (Object.hasOwn(worksheet, cellAddress)) {
-          const { r, c } = XLSX.utils.decode_cell(cellAddress);
-          const dimensions = {};
-
-          const height = worksheet?.["!rows"]?.[r]?.hpt;
-          const width = worksheet?.["!cols"]?.[c]?.wpx;
-
-          if (height) dimensions.height = `${height / 0.75}px`;
-          if (width) dimensions.width = `${width}px`;
-
-          const cellStylesWithDimensions = {
-            ...(cellStyle ?? {}),
-            dimensions,
-          };
-
-          worksheet[cellAddress] = {
-            ...worksheet[cellAddress],
-            s: parseExcelStyleToHTML(
-              cellStylesWithDimensions,
-              wb.Themes?.themeElements?.clrScheme ?? {}
-            ),
-          };
-        }
-      });
-    }
-  });
-  return wb;
-};
-
-const stox = (wb) => {
-  const out = [];
-  wb.SheetNames.forEach(function (name) {
-    const o = { name: name, rows: {}, cols: {}, styles: [] };
-    const ws = wb.Sheets[name];
-    let gridStatus = false;
-    if (!ws || !ws["!ref"]) return;
-    const range = XLSX.utils.decode_range(ws["!ref"]);
-    // sheet_to_json will lost empty row and col at begin as default
-
-    // Populating 100 rows and a-z columns by default.
-    if (range?.e) {
-      if (range.e.r < 99) range.e.r = 99;
-      if (range.e.c < 25) range.e.c = 25;
-    } else {
-      range.e = {
-        r: 99,
-        c: 25,
-      };
-    }
-
-    range.s = { r: 0, c: 0 };
-    const aoa = XLSX.utils.sheet_to_json(ws, {
-      raw: false,
-      header: 1,
-      range: range,
-    });
-
-    aoa.forEach(function (r, i) {
-      const cells = {};
-      let rowHeight = null;
-      r.forEach(function (c, j) {
-        cells[j] = { text: c || String(c) };
-        const cellRef = XLSX.utils.encode_cell({ r: i, c: j });
-        const formattedText = ws[cellRef].w ?? "";
-        cells[j].formattedText = formattedText;
-        const cellStyle = ws[cellRef].s ?? "";
-        const cellMeta = ws[cellRef].metadata;
-        const cellType = ws[cellRef].t;
-        const parsedData = parseCssToXDataStyles(cellStyle, cellType);
-        const parsedCellStyles = parsedData.parsedStyles;
-        const sheetConfig = parsedData.sheetConfig;
-        if (!gridStatus && sheetConfig?.gridLine) {
-          gridStatus = true;
-        }
-        const dimensions = parsedCellStyles.dimensions;
-        delete parsedCellStyles.dimensions;
-        if (Object.keys(parsedCellStyles).length) {
-          const length = o.styles.push(parsedCellStyles);
-          cells[j].style = length - 1;
-        }
-
-        if (ws[cellRef]?.f && ws[cellRef].f !== "") {
-          cells[j].text = "=" + ws[cellRef].f;
-        }
-
-        if (dimensions?.height) rowHeight = dimensions.height;
-        if (dimensions?.width) {
-          o.cols[j] = { width: dimensions.width };
-        }
-        if (cellMeta) {
-          cells[j].cellMeta = cellMeta;
-        }
-      });
-      if (rowHeight) o.rows[i] = { cells: cells, height: rowHeight };
-      else o.rows[i] = { cells: cells };
-    });
-    o.rows.len = aoa.length;
-
-    o.merges = [];
-    (ws["!merges"] || []).forEach(function (merge, i) {
-      //Needed to support merged cells with empty content
-      if (o.rows[merge.s.r] == null) {
-        o.rows[merge.s.r] = { cells: {} };
-      }
-      if (o.rows[merge.s.r].cells[merge.s.c] == null) {
-        o.rows[merge.s.r].cells[merge.s.c] = {};
-      }
-
-      o.rows[merge.s.r].cells[merge.s.c].merge = [
-        merge.e.r - merge.s.r,
-        merge.e.c - merge.s.c,
-      ];
-
-      o.merges[i] = XLSX.utils.encode_range(merge);
-    });
-    o.sheetConfig = { gridLine: !gridStatus };
-    out.push(o);
-  });
-
-  return out;
-};
-
 const rgbaToRgb = (hexColor) => {
   // Assuming a white background, so the background RGB is (255, 255, 255)
   const backgroundR = 255,
@@ -685,7 +521,6 @@ export {
   generateUniqueId,
   replaceCellRefWithNew,
   readExcelFile,
-  stox,
   rgbaToRgb,
   getNewSheetName,
   getRowHeightForTextWrap,
