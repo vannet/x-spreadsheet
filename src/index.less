@@ -59,7 +59,7 @@ body {
 }
 
 .@{css-prefix} {
-  font-size: 13px;
+  /*font-size: 13px;*/
   line-height: normal;
   user-select: none;
   -moz-user-select: none;
@@ -350,6 +350,7 @@ body {
   }
   .@{css-prefix}-selector-area {
     position: absolute;
+    box-sizing: content-box;
     border: 2px solid rgb(75, 137, 255);
     background: rgba(75, 137, 255, 0.1);
     z-index: 5;
