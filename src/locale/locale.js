@@ -15,10 +15,22 @@ import th from "./th";
 import tr from "./tr";
 import tw from "./tw";
 import vi from "./vi";
+import ms from "./ms";
+import cs from "./cs";
+import da from "./da";
+import nl from "./nl";
+import no from "./no";
+import pl from "./pl";
+import fi from "./fi";
+import sv from "./sv";
+import el from "./el";
+import ua from "./ua";
+import he from "./he";
+import hi from "./hi";
 
 // Defines the fallback language as English
-let $languages = ["en","ar","cn","de","es","fr","id","it","jp","ko","pt","ru","th","tr","tw","vi"];
-const $messages = {en,ar,cn,de,es,fr,id,it,jp,ko,pt,ru,th,tr,tw,vi};
+let $languages = ["en","ar","cn","de","es","fr","id","it","jp","ko","pt","ru","th","tr","tw","vi","ms","cs","da","nl","no","pl","fi","sv","el","ua","he","hi"];
+const $messages = {en,ar,cn,de,es,fr,id,it,jp,ko,pt,ru,th,tr,tw,vi,ms,cs,da,nl,no,pl,fi,sv,el,ua,he,hi};
 
 function translate(key, messages) {
   if (messages) {
